@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#111827">
+  <title>Rotatiechecker | Zone 41 - Sequencer</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;font-family:Arial,Helvetica,sans-serif;background:#f1f5f9;color:#0f172a}.card{width:100%;max-width:430px;background:#fff;border-radius:22px;padding:26px;box-shadow:0 12px 35px rgba(15,23,42,.12)}.icon{width:52px;height:52px;margin:0 auto 12px;display:grid;place-items:center;border-radius:16px;background:#111827;color:#fff;font-size:27px}h1{margin:0;text-align:center;font-size:28px}.subtitle{margin:6px 0 26px;text-align:center;color:#64748b}label{display:block;margin-bottom:8px;font-size:14px;font-weight:700}input{width:100%;padding:14px;border:1px solid #cbd5e1;border-radius:13px;font-size:16px;background:#fff}#result{margin-top:20px}.date-title{text-align:center;color:#64748b;font-size:14px;text-transform:capitalize}.shift{padding:17px;border-radius:16px;margin-top:11px;border:1px solid}.morning{background:#eff6ff;border-color:#bfdbfe}.afternoon{background:#ecfdf5;border-color:#a7f3d0}.shift-label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.morning .shift-label{color:#1d4ed8}.afternoon .shift-label{color:#047857}.place{margin-top:5px;font-size:23px;font-weight:800}.error{background:#fffbeb;border:1px solid #fde68a;color:#92400e;padding:15px;border-radius:15px;text-align:center;font-weight:700}.error small{display:block;margin-top:5px;font-weight:400}button{width:100%;margin-top:20px;padding:13px;border:1px solid #cbd5e1;border-radius:13px;background:#fff;color:#334155;font-size:15px;font-weight:700;cursor:pointer}.foot{margin:18px 0 0;text-align:center;color:#94a3b8;font-size:11px;line-height:1.5}
+  </style>
+</head>
+<body>
+<main class="card">
+  <div class="icon">&#8635;</div><h1>Rotatiechecker</h1><p class="subtitle">Zone 41 / Sequencer</p>
+  <label for="workdate">Kies je werkdatum</label><input id="workdate" type="date">
+  <section id="result" aria-live="polite"></section>
+  <button id="reset" type="button">Andere datum kiezen</button>
+  <p class="foot">Basisrotatie gestart op zaterdag 7 november 2026.<br>Het schema wordt automatisch verder berekend.</p>
+</main>
+<script>
+const input=document.getElementById('workdate'),result=document.getElementById('result'),reset=document.getElementById('reset');
+const anchorUTC=Date.UTC(2026,10,7),WEEK_MS=7*24*60*60*1000;
+function showRotation(value){
+ if(!value){result.innerHTML='';return}
+ const [year,month,day]=value.split('-').map(Number),selected=new Date(year,month-1,day),weekday=selected.getDay();
+ if(weekday!==0&&weekday!==6){result.innerHTML='<div class="error">Dit is geen zaterdag of zondag.<small>Kies een werkdag in het weekend.</small></div>';return}
+ const saturday=new Date(year,month-1,day);if(weekday===0)saturday.setDate(saturday.getDate()-1);
+ const saturdayUTC=Date.UTC(saturday.getFullYear(),saturday.getMonth(),saturday.getDate()),weeks=Math.round((saturdayUTC-anchorUTC)/WEEK_MS),patternA=((weeks%2)+2)%2===0;
+ let morning,afternoon;
+ if(weekday===6){morning=patternA?'Zone 41':'Sequencer';afternoon=patternA?'Sequencer':'Zone 41'}else{morning=patternA?'Sequencer':'Zone 41';afternoon=patternA?'Zone 41':'Sequencer'}
+ const formatted=new Intl.DateTimeFormat('nl-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(selected);
+ result.innerHTML=`<div class="date-title">${formatted}</div><div class="shift morning"><div class="shift-label">Voormiddag</div><div class="place">${morning}</div></div><div class="shift afternoon"><div class="shift-label">Namiddag</div><div class="place">${afternoon}</div></div>`;
+}
+input.addEventListener('change',()=>showRotation(input.value));reset.addEventListener('click',()=>{input.value='';result.innerHTML='';input.focus()});
+</script>
+</body></html>
